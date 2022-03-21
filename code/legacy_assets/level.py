@@ -87,4 +87,3 @@ class YSortCameraGroup(pygame.sprite.Group):
 				self.display_surface.blit(sprite.image,offset_pos,sprite.sprite_location)
 			else:
 				self.display_surface.blit(sprite.image,offset_pos)
-

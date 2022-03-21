@@ -176,4 +176,3 @@ class Knight(pygame.sprite.Sprite):
 		
 		#finally we will update the image that will be displayed
 		self.image = self.images[self.index]
-		
