@@ -1,0 +1,215 @@
+import pygame 
+# from settings_32 import *
+from tile_sm import TileSM
+from barriers.barrier import Barrier
+# from barriers.barrier_l import BarrierL
+# from barriers.barrier_r import BarrierR
+# from barriers.barrier_t import BarrierT
+# from barriers.barrier_b import BarrierB
+from barriers.barrier_tl import BarrierTL
+from barriers.barrier_tr import BarrierTR
+from barriers.barrier_br import BarrierBR
+from barriers.barrier_bl import BarrierBL
+# from barriers.poly_barrier import PolyBarrier
+from floor_tile import FloorTile
+from invisible_tile import InvisibleTile
+from portal import Portal
+from player import Player
+from enemy import Enemy
+from enemies.spikes import Spikes
+from enemies.beartrap import BearTrap
+from enemies.thorny_plant import ThornyPlant
+from tracking_enemy import TrackingEnemy
+from debug import debug
+
+class LevelEP0:
+	def __init__(self, parent, spawn, settings):
+
+		self.debug = False
+
+		self.parent = parent
+		self.spawn = spawn
+		self.removed_assets = []
+		#need to load state from previous entries into this level if exists
+		if self.spawn[0] in parent.state_dictionary.keys():
+			#should load from state
+			for asset in parent.state_dictionary[self.spawn[0]]:
+				print(parent.state_dictionary[self.spawn[0]][asset])
+				print(parent.state_dictionary[self.spawn[0]][asset]['settings_grid_location'])
+				self.removed_assets.append(parent.state_dictionary[self.spawn[0]][asset]['settings_grid_location'])
+			#probably should create a list object of locations that should not be loaded from the settings grid
+			print('should load from state')
+		else:
+			#need to create new state object for this level
+			print('creating level object')
+			parent.state_dictionary[self.spawn[0]] = {}
+
+		
+		self.map = settings[0] #use self.spawn[0]
+		self.portal_mapping = settings[1]
+		self.background_image = settings[2]
+		self.tilesize = settings[3]
+		self.image_size = settings[4]
+		self.image_shift = settings[5]
+
+		# self.background_image = '../graphics/dungeon/EP_0.png'
+		# self.map = EP_0_MAP #use self.spawn[0]
+		# self.portal_mapping = EP_0_PORTALS
+
+		# get the display surface 
+		self.display_surface = pygame.display.get_surface()
+
+		# sprite group setup
+		self.visible_sprites = YSortCameraGroup(self.image_size,self.image_shift)
+		self.obstacle_sprites = pygame.sprite.Group()
+		self.player_sprite = pygame.sprite.Group()
+		self.portals = pygame.sprite.Group()
+
+		# sprite setup
+		self.create_map()
+
+	def create_map(self):
+		portal_incrementor = 0
+		sp_incrementor = 0
+		for row_index,row in enumerate(self.map):
+			for col_index, col in enumerate(row):
+				#make sure asset has not been removed
+				if (col_index, row_index) not in self.removed_assets:
+					x = col_index * self.tilesize
+					y = row_index * self.tilesize
+					if col == 'x':
+						if self.tilesize == 32:
+							TileSM((x,y),[self.visible_sprites,self.obstacle_sprites])
+						else:
+							Barrier((x,y),[self.visible_sprites,self.obstacle_sprites],self.debug)
+					if col == 'l':
+						BarrierTL((x,y),[self.visible_sprites,self.obstacle_sprites],self.debug)
+						BarrierBL((x,y),[self.visible_sprites,self.obstacle_sprites],self.debug)
+					if col == 'r':
+						BarrierTR((x,y),[self.visible_sprites,self.obstacle_sprites],self.debug)
+						BarrierBR((x,y),[self.visible_sprites,self.obstacle_sprites],self.debug)
+					if col == 't':
+						BarrierTL((x,y),[self.visible_sprites,self.obstacle_sprites],self.debug)
+						BarrierTR((x,y),[self.visible_sprites,self.obstacle_sprites],self.debug)
+					if col == 'b':
+						BarrierBL((x,y),[self.visible_sprites,self.obstacle_sprites],self.debug)
+						BarrierBR((x,y),[self.visible_sprites,self.obstacle_sprites],self.debug)
+					if col == '0':
+						BarrierTL((x,y),[self.visible_sprites,self.obstacle_sprites],self.debug)
+					if col == '1':
+						BarrierTR((x,y),[self.visible_sprites,self.obstacle_sprites],self.debug)
+					if col == '2':
+						BarrierBL((x,y),[self.visible_sprites,self.obstacle_sprites],self.debug)
+					if col == '3':
+						BarrierBR((x,y),[self.visible_sprites,self.obstacle_sprites],self.debug)
+					if col == '4':
+						BarrierTL((x,y),[self.visible_sprites,self.obstacle_sprites],self.debug)
+						BarrierTR((x,y),[self.visible_sprites,self.obstacle_sprites],self.debug)
+						BarrierBL((x,y),[self.visible_sprites,self.obstacle_sprites],self.debug)
+					if col == '5':
+						BarrierTL((x,y),[self.visible_sprites,self.obstacle_sprites],self.debug)
+						BarrierTR((x,y),[self.visible_sprites,self.obstacle_sprites],self.debug)
+						BarrierBR((x,y),[self.visible_sprites,self.obstacle_sprites],self.debug)
+					if col == '6':
+						BarrierTL((x,y),[self.visible_sprites,self.obstacle_sprites],self.debug)
+						BarrierBL((x,y),[self.visible_sprites,self.obstacle_sprites],self.debug)
+						BarrierBR((x,y),[self.visible_sprites,self.obstacle_sprites],self.debug)
+					if col == '7':
+						BarrierTR((x,y),[self.visible_sprites,self.obstacle_sprites],self.debug)
+						BarrierBL((x,y),[self.visible_sprites,self.obstacle_sprites],self.debug)
+						BarrierBR((x,y),[self.visible_sprites,self.obstacle_sprites],self.debug)
+					if col == 'f':
+						FloorTile((x,y),[self.visible_sprites])
+					if col == 'i':
+						InvisibleTile((x,y),[self.visible_sprites,self.obstacle_sprites])
+					if col == 'p':
+						if self.spawn[1] == sp_incrementor:
+							# centering player to the door
+							if self.spawn[2] == 'm':
+								self.player = Player((x + 32,y),[self.visible_sprites],self.obstacle_sprites,self.player_sprite, self.portals,self)
+							else:
+								self.player = Player((x ,y),[self.visible_sprites],self.obstacle_sprites,self.player_sprite, self.portals,self)
+						sp_incrementor = sp_incrementor + 1
+					if col == 'e':
+						self.enemy = Enemy((x,y),[self.visible_sprites,self.obstacle_sprites],self.obstacle_sprites)
+					if col == 's':
+						self.enemy = Spikes((x,y),[self.visible_sprites,self.obstacle_sprites],self.obstacle_sprites)
+					if col == '*':
+						self.enemy = BearTrap((x,y),[self.visible_sprites,self.obstacle_sprites],self.obstacle_sprites)
+						print('creating')
+					if col == '+':
+						self.enemy = ThornyPlant((x,y),[self.visible_sprites,self.obstacle_sprites],self.obstacle_sprites)
+					if col == 'h':
+						self.enemy = TrackingEnemy((x,y),[self.visible_sprites,self.obstacle_sprites],self.obstacle_sprites,self.player_sprite)
+					#portal mapping
+					if col == 'd':
+						self.enemy = Portal((x,y),[self.visible_sprites,self.portals],self.portal_mapping[portal_incrementor])
+						portal_incrementor = portal_incrementor + 1
+
+	def run(self):
+		# update and draw the game
+		# print(self.parent.state_dictionary)
+		#draw sprites
+		self.visible_sprites.custom_draw(self.player, self.background_image)
+		self.visible_sprites.update()
+
+
+class YSortCameraGroup(pygame.sprite.Group):
+	def __init__(self,image_size,image_shift):
+
+		# general setup 
+		super().__init__()
+		self.display_surface = pygame.display.get_surface()
+		self.half_width = self.display_surface.get_size()[0] // 2
+		self.half_height = self.display_surface.get_size()[1] // 2
+		self.offset = pygame.math.Vector2()
+		self.static_player_offset = pygame.math.Vector2()
+		self.image_size = image_size
+		self.image_shift = image_shift
+
+	def custom_draw(self,player, background_image):
+
+		# getting the offset 
+		self.offset.x = player.rect.centerx - self.half_width
+		self.offset.y = player.rect.centery - self.half_height
+		self.static_player_offset.x = player.rect.left - self.half_width + 32
+		self.static_player_offset.y = player.rect.top - self.half_height + 32
+		
+		#load map
+		my_image = pygame.image.load(background_image)
+		# Set the size for the image
+		# DEFAULT_IMAGE_SIZE = (2700, 2500)
+		# Scale the image to your needed size
+		image = pygame.transform.scale(my_image, self.image_size)
+		#display map
+		self.display_surface.blit(image, self.image_shift - self.offset) # screen = pygame.display.set_mode((1200, 1000)) 
+
+		# for sprite in self.sprites():
+		for sprite in sorted(self.sprites(),key = lambda sprite: sprite.rect.centery):
+			offset_pos = sprite.rect.topleft - self.offset
+			offset_pos_right = sprite.rect.topright - self.offset
+			offset_pos_bottom = sprite.rect.bottomleft - self.offset
+			offset_pos_bottom_right = sprite.rect.bottomright - self.offset
+			offset_pos_bottom_left = sprite.rect.bottomleft - self.offset
+			# self.display_surface.blit(sprite.image,offset_pos)
+			if sprite.name == 'floor':
+				self.display_surface.blit(sprite.image, offset_pos, sprite.sprite_location)
+			elif sprite.name == 'spikes':
+				self.display_surface.blit(sprite.image, offset_pos, sprite.sprite_location)
+			elif sprite.name == 'beartrap':
+				self.display_surface.blit(sprite.image, offset_pos, sprite.sprite_location)
+			elif sprite.name == 'thorny_plant':
+				self.display_surface.blit(sprite.image, offset_pos, sprite.sprite_location)
+			elif sprite.name == 'player':
+				player_offest =  sprite.rect.topleft - self.static_player_offset - sprite.dynamic_offset
+				self.display_surface.blit(sprite.image, player_offest, sprite.sprite_location)
+			elif sprite.name == 'right':
+				self.display_surface.blit(sprite.image, offset_pos_right)
+			elif sprite.name == 'bottom':
+				self.display_surface.blit(sprite.image, offset_pos_bottom)
+			elif sprite.name == 'bottom_right':
+				self.display_surface.blit(sprite.image, offset_pos_bottom_right)
+			elif sprite.name == 'bottom_left':
+				self.display_surface.blit(sprite.image, offset_pos_bottom_left)
+			else:
+				self.display_surface.blit(sprite.image,offset_pos)
