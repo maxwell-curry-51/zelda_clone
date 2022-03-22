@@ -1,10 +1,8 @@
 import pygame, sys
 from pygame.locals import *
 from settings import *
-# from level import Level
-# from sublevel import SubLevel
-from level_ep_0 import LevelEP0
-# from level_ep_1 import LevelEP1
+import time
+from level import Level
 
 class Game:
 	def __init__(self):
@@ -21,9 +19,8 @@ class Game:
 		self.up_released = True
 		self.down_released = True
 		self.pause_released = True
-
-		# self.last_level_num = 'ep_0'
-		# self.level_num = 'ep_0'
+		
+		self.changed = False
 		self.last_spawn = ('EP_0_MAP',3,'m')
 		self.spawn = ('EP_0_MAP',3,'m')
 
@@ -92,16 +89,24 @@ class Game:
 			if self.paused:
 				self.Display_Pause_Menu(display_surface, self.pause_menu_selected)
 			else:
-				self.screen.fill('black')
-				self.level.run()
-				pygame.display.update()
-				self.clock.tick(FPS)
 				if self.last_spawn[0] != self.spawn[0]:
 					self.last_spawn = self.spawn
 					self.Load_Level()
+					self.changed = True
+				self.screen.fill('black')
+				self.level.run()
+				#shitty fix because update renders one frame incorrectly
+				if self.changed:
+					self.screen.fill('black')
+				pygame.display.update()
+				self.clock.tick(FPS)
+				if self.changed == True:
+					self.changed = False
+
+
 
 	def Load_Level(self):
-		self.level = LevelEP0(self, self.spawn, SETTINGS[SETTING_INDEXES.index(self.spawn[0])])
+		self.level = Level(self, self.spawn, SETTINGS[SETTING_INDEXES.index(self.spawn[0])])
 	
 	def Display_Pause_Menu(self,display_surface,pause_menu_selected):
 		pause_background = pygame.image.load('../graphics/pause_menu/pause_background.png')
