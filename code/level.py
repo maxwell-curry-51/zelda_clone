@@ -178,6 +178,9 @@ class YSortCameraGroup(pygame.sprite.Group):
 				self.display_surface.blit(sprite.image, offset_pos, sprite.sprite_location)
 			elif sprite.name == 'thorny_plant':
 				self.display_surface.blit(sprite.image, offset_pos, sprite.sprite_location)
+			elif sprite.name == 'enemy':
+				player_offest =  sprite.rect.topleft - self.static_player_offset - sprite.dynamic_offset
+				self.display_surface.blit(sprite.image, player_offest, sprite.sprite_location)
 			elif sprite.name == 'player':
 				player_offest =  sprite.rect.topleft - self.static_player_offset - sprite.dynamic_offset
 				self.display_surface.blit(sprite.image, player_offest, sprite.sprite_location)

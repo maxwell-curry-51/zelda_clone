@@ -15,35 +15,26 @@ class Enemy(pygame.sprite.Sprite):
 
 		#adding all the images to sprite array
 		self.images = []
-		self.images.append(pygame.transform.scale(pygame.image.load('../graphics/player_sprites/sample_1.png'), (10 * 64, 8 * 64)))
-		self.sprite_locations = [[],[],[],[]]
-		self.max_row = 8
-		self.max_col = 10
-		self.movement_counter = 0
-
-		self.spritesheet_mapping = SAMPLE_1
-		for row_index,row in enumerate(self.spritesheet_mapping):
-			for col_index, col in enumerate(row):
-				if col == 'er':
-					for i in range(6):
-						self.sprite_locations[0].append(((64 * col_index),(64 * row_index),64,64))
-						self.sprite_locations[1].append(((self.max_col * 64) - (64 * (col_index + 1)),(64 * row_index),64,64))
-				if col == 'eu':
-					for i in range(12):
-						self.sprite_locations[2].append(((64 * col_index),(64 * row_index),64,64))
-				if col == 'ed':
-					for i in range(6):
-						self.sprite_locations[3].append(((64 * col_index),(64 * row_index),64,64))
+		self.images.append(pygame.transform.scale(pygame.image.load('../graphics/png/Dead (1).png'), (50, 50)))
+		# self.images.append(pygame.transform.scale(pygame.image.load('../graphics/png/Dead (2).png'), (50, 50)))
+		# self.images.append(pygame.transform.scale(pygame.image.load('../graphics/png/Dead (3).png'), (50, 50)))
+		# self.images.append(pygame.transform.scale(pygame.image.load('../graphics/png/Dead (4).png'), (50, 50)))
+		# self.images.append(pygame.transform.scale(pygame.image.load('../graphics/png/Dead (5).png'), (50, 50)))
+		# self.images.append(pygame.transform.scale(pygame.image.load('../graphics/png/Dead (6).png'), (50, 50)))
+		# self.images.append(pygame.transform.scale(pygame.image.load('../graphics/png/Dead (7).png'), (50, 50)))
+		# self.images.append(pygame.transform.scale(pygame.image.load('../graphics/png/Dead (8).png'), (50, 50)))
+		# self.images.append(pygame.transform.scale(pygame.image.load('../graphics/png/Dead (9).png'), (50, 50)))
+		# self.images.append(pygame.transform.scale(pygame.image.load('../graphics/png/Dead (10).png'), (50, 50)))
 
 		self.path = []
-		for i in range(1,25):
-			self.path.append(0)
 		for i in range(1,25):
 			self.path.append(1)
 		for i in range(1,25):
 			self.path.append(2)
 		for i in range(1,25):
 			self.path.append(3)
+		for i in range(1,25):
+			self.path.append(4)
 		self.path_index = 0
 
 		
@@ -54,67 +45,40 @@ class Enemy(pygame.sprite.Sprite):
 		self.delay_index = 0
 		#index value to get the image from the array
 		#initially it is 0 
+		self.index = 0
 		
 		#now the image that we will display will be the index from the image array 
-		self.image = self.images[0]
+		self.image = self.images[self.index]
+
+		#scale down
+		# pygame.transform.scale(picture, (200, 200))
 
 		#self.image = pygame.image.load('../graphics/test/link_sheet.png').convert_alpha().image_at((0, 0, 16, 16))
-		self.sprite_location = self.sprite_locations[1][0]
 		self.rect = self.image.get_rect(topleft = pos)
-		# self.hitbox = self.rect.inflate(0,26)
-		self.hitbox = pygame.Rect(self.rect.x,self.rect.y,64,64)
-		
-		self.dynamic_offset = pygame.math.Vector2()
-		self.dynamic_offset.x = 0
-		self.dynamic_offset.y = 0
+		self.hitbox = self.rect.inflate(0,26)
 
 		self.direction = pygame.math.Vector2()
-		self.last_direction = 0
 		self.speed = 5
 
 		self.obstacle_sprites = obstacle_sprites
 		
 		self.health = 5
-		self.name = 'enemy'
+		self.name = 'not floor'
 
 	def input(self):
 		#get player location
-		if self.path[self.path_index] == 3:
-			#down
-			self.movement_counter = ( self.movement_counter + 1) % len(self.sprite_locations[3])
-			self.direction.y = 1
-			self.image = self.images[0]
-			self.sprite_location =self.sprite_locations[3][self.movement_counter]
-			self.last_direction = 3
+		if self.path[self.path_index] == 4:
+			self.direction.y = -1
 			#if the index is larger than the total images
 			if self.path_index >= len(self.path) - 1:
 				#we will make the index to 0 again
 				self.path_index = 0
 		elif self.path[self.path_index] == 2:
-			#up
-			self.movement_counter = ( self.movement_counter + 1) % len(self.sprite_locations[2])
-			self.direction.y = -1
-			self.image = self.images[0]
-			self.sprite_location =self.sprite_locations[2][self.movement_counter]
-			self.last_direction = 2
+			self.direction.y = 1
 		elif self.path[self.path_index] == 1:
-			#right
-			self.movement_counter = ( self.movement_counter + 1) % len(self.sprite_locations[0])
 			self.direction.x = 1
-		
-			#finally we will update the image that will be displayed
-			self.image = self.images[0]
-			self.sprite_location =self.sprite_locations[0][self.movement_counter]
-			self.last_direction = 0
-		elif self.path[self.path_index] == 0:
-			#left
-			self.movement_counter = ( self.movement_counter + 1) % len(self.sprite_locations[1])
+		elif self.path[self.path_index] == 3:
 			self.direction.x = -1
-		
-			#finally we will update the image that will be displayed
-			self.image = pygame.transform.flip(self.images[0],True,False)
-			self.sprite_location = self.sprite_locations[1][self.movement_counter]
-			self.last_direction = 1
 		else:
 			self.direction.x = 0
 			self.direction.y = 0
@@ -161,3 +125,14 @@ class Enemy(pygame.sprite.Sprite):
 			self.move(self.speed)
 			self.delay_index = 0
 		self.delay_index += 1
+		#character animation
+		#when the update method is called, we will increment the index
+		self.index += 1
+ 
+		#if the index is larger than the total images
+		if self.index >= len(self.images):
+			#we will make the index to 0 again
+			self.index = 0
+		
+		#finally we will update the image that will be displayed
+		self.image = self.images[self.index]
