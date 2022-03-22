@@ -42,9 +42,6 @@ class Player(pygame.sprite.Sprite):
 					for i in range(4):
 						self.sprite_locations[3].append(((64 * col_index),(64 * row_index),64,64))
 		
-		print('player sprite setup complete' )
-
-		
 		#player attack animation
 		self.attack_animation = False
 		self.images.append(pygame.transform.scale(pygame.image.load('../graphics/player_sprites/sample_2.png'), (12 * 64, 1 * 88)))
