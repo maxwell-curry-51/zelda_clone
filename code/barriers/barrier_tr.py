@@ -15,4 +15,4 @@ class BarrierTR(pygame.sprite.Sprite):
 		self.remove = False
 		self.name = 'right'
 		
-		self.health = 666
+		self.health = float('inf')

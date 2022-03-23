@@ -23,9 +23,9 @@ class ThornyPlant(pygame.sprite.Sprite):
 		self.hitbox = pygame.Rect(self.rect.x,self.rect.y,64,64)
 		
 		self.health = 1
+		self.attacked = False
 		self.name = 'thorny_plant'
-	
-	# def update(self):	
-	# 	if self.health <= 0:
-	# 		#remove sprite from physical groups
-	# 		self.kill()
+
+	def update(self):
+		if self.health <= 0:
+			self.kill()
