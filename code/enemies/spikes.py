@@ -19,5 +19,5 @@ class Spikes(pygame.sprite.Sprite):
 		# set hitbox
 		self.hitbox = pygame.Rect(self.rect.x,self.rect.y,64,64)
 		
-		self.health = 666
+		self.health = float('inf')
 		self.name = 'spikes'

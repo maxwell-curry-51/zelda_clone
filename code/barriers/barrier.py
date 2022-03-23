@@ -14,4 +14,4 @@ class Barrier(pygame.sprite.Sprite):
 		self.remove = False
 		self.name = 'not floor'
 		
-		self.health = 666
+		self.health = float('inf')

@@ -206,49 +206,47 @@ class Player(pygame.sprite.Sprite):
 			if self.attack:
 				for sprite in self.obstacle_sprites:
 					# attack general area sprite.hitbox.colliderect(Rect(self.hitbox.x - 20, self.hitbox.y - 20, self.hitbox.w + 40, self.hitbox.h + 40))
+					attack_landed = False
 					if self.last_direction == 0:
 						if sprite.hitbox.colliderect(Rect(self.hitbox.x + 32, self.hitbox.y - 32, self.hitbox.w + 32, self.hitbox.h + 64)) and sprite != self.rect :
-							sprite.health -= 1
-							print(sprite.health)
+							sprite.attack_direction = pygame.math.Vector2(-1,0)
+							attack_landed = True
 					if self.last_direction == 1:
 						if sprite.hitbox.colliderect(Rect(self.hitbox.x - 64, self.hitbox.y - 32, self.hitbox.w + 32, self.hitbox.h + 64)) and sprite != self.rect :
-							sprite.health -= 1
-							print(sprite.health)
+							sprite.attack_direction = pygame.math.Vector2(1,0)
+							attack_landed = True
 					if self.last_direction == 2:
 						if sprite.hitbox.colliderect(Rect(self.hitbox.x - 32, self.hitbox.y - 64, self.hitbox.w + 64, self.hitbox.h + 32)) and sprite != self.rect :
-							sprite.health -= 1
-							print(sprite.health)
+							sprite.attack_direction = pygame.math.Vector2(0,1)
+							attack_landed = True
 					if self.last_direction == 3:
 						if sprite.hitbox.colliderect(Rect(self.hitbox.x - 32, self.hitbox.y + 32, self.hitbox.w + 64, self.hitbox.h + 32)) and sprite != self.rect :
-							sprite.health -= 1
-							print(sprite.health)
-					if sprite.health <= 0:
-						#log state of removed asset
-						self.add_to_state(sprite)
-						#remove sprite from physical groups
-						sprite.kill()
+							sprite.attack_direction = pygame.math.Vector2(0,-1)
+							attack_landed = True
+					if attack_landed:
+						sprite.health -= 1
+						print(sprite.health)
+						sprite.attacked = True
+						sprite.attacked_incrementor = 1
+						if sprite.health - 1 <= 0:
+							self.add_to_state(sprite)
 				self.attack = False
 		
 	def attacked(self,direction):
 		for sprite in self.obstacle_sprites:
 			if sprite.hitbox.colliderect(self.hitbox) and sprite != self.rect :
+				attacked = False
 				if sprite.name == 'spikes':
 					self.health = self.health - 1
-					#knockback
-					for i in range(12):
-						self.incremental_knockback(direction)
-						self.collision(direction, True)
 				if sprite.name == 'beartrap':
 					self.health = self.health - 1
 					self.add_to_state(sprite)
 					sprite.kill()
-					#knockback
-					for i in range(12):
-						self.incremental_knockback(direction)
-						self.collision(direction, True)
 				if sprite.name == 'thorny_plant':
 					self.health = self.health - 1
-					#knockback
+				
+				#knockback
+				if attacked:
 					for i in range(12):
 						self.incremental_knockback(direction)
 						self.collision(direction, True)
