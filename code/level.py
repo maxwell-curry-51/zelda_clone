@@ -8,11 +8,14 @@ from floor_tile import FloorTile
 from invisible_tile import InvisibleTile
 from portal import Portal
 from player import Player
-from enemy import Enemy
+from enemies.enemy import Enemy
 from enemies.spikes import Spikes
 from enemies.beartrap import BearTrap
 from enemies.thorny_plant import ThornyPlant
 from tracking_enemy import TrackingEnemy
+from allies.npc_ally import NPCAlly
+from encounters.chat_bubble import ChatBubble
+from encounters.chat_bubble_text import ChatBubbleText
 from debug import debug
 
 class Level:
@@ -34,7 +37,7 @@ class Level:
 		
 		self.map = settings[0] #use self.spawn[0]
 		self.portal_mapping = settings[1]
-		self.background_image = settings[2]
+		self.background_image = pygame.image.load(settings[2])
 		self.tilesize = settings[3]
 		self.image_size = settings[4]
 		self.image_shift = settings[5]
@@ -45,6 +48,8 @@ class Level:
 		# sprite group setup
 		self.visible_sprites = YSortCameraGroup(self.image_size,self.image_shift)
 		self.obstacle_sprites = pygame.sprite.Group()
+		self.enemy_sprites = pygame.sprite.Group()
+		self.ally_sprites = pygame.sprite.Group()
 		self.player_sprite = pygame.sprite.Group()
 		self.portals = pygame.sprite.Group()
 
@@ -54,13 +59,20 @@ class Level:
 	def create_map(self):
 		portal_incrementor = 0
 		sp_incrementor = 0
+		ChatBubble((500,500),[self.visible_sprites,self.ally_sprites])
+		ChatBubbleText((500,500),[self.visible_sprites,self.ally_sprites],0)
+		ChatBubbleText((500,500),[self.visible_sprites,self.ally_sprites],1)
+		ChatBubbleText((500,500),[self.visible_sprites,self.ally_sprites],2)
+		ChatBubbleText((500,500),[self.visible_sprites,self.ally_sprites],3)
 		for row_index,row in enumerate(self.map):
 			for col_index, col in enumerate(row):
 				#make sure asset has not been removed
 				if (col_index, row_index) not in self.removed_assets: #this is not the really slow step
 					x = col_index * self.tilesize
 					y = row_index * self.tilesize
-					if col == 'x':
+					if col == ' ':
+						pass
+					elif col == 'x':
 						Barrier((x,y),[self.visible_sprites,self.obstacle_sprites],self.debug)
 					elif col == 'l':
 						BarrierTL((x,y),[self.visible_sprites,self.obstacle_sprites],self.debug)
@@ -106,22 +118,27 @@ class Level:
 						if self.spawn[1] == sp_incrementor:
 							# centering player to the door
 							if self.spawn[2] == 'm':
-								self.player = Player((x + 32,y),[self.visible_sprites],self.obstacle_sprites,self.player_sprite, self.portals,self)
+								self.player = Player((x + 32,y),[self.visible_sprites,self.obstacle_sprites,self.player_sprite],self.obstacle_sprites,self.player_sprite, self.enemy_sprites, self.ally_sprites, self.portals,self)
 							else:
-								self.player = Player((x ,y),[self.visible_sprites],self.obstacle_sprites,self.player_sprite, self.portals,self)
+								self.player = Player((x ,y),[self.visible_sprites,self.obstacle_sprites,self.player_sprite],self.obstacle_sprites,self.player_sprite, self.enemy_sprites, self.ally_sprites, self.portals,self)
 						sp_incrementor = sp_incrementor + 1
 					elif col == 'e':
-						Enemy((x,y),[self.visible_sprites,self.obstacle_sprites],self.obstacle_sprites)
+						Enemy((x,y),[self.visible_sprites,self.enemy_sprites],self.obstacle_sprites)
 					elif col == 's':
-						Spikes((x,y),[self.visible_sprites,self.obstacle_sprites],self.obstacle_sprites)
+						Spikes((x,y),[self.visible_sprites,self.obstacle_sprites, self.enemy_sprites])
 					elif col == '*':
-						BearTrap((x,y),[self.visible_sprites,self.obstacle_sprites],self.obstacle_sprites)
+						BearTrap((x,y),[self.visible_sprites,self.obstacle_sprites, self.enemy_sprites])
 					elif col == '+':
-						ThornyPlant((x,y),[self.visible_sprites,self.obstacle_sprites],self.obstacle_sprites)
+						ThornyPlant((x,y),[self.visible_sprites,self.obstacle_sprites, self.enemy_sprites])
 					elif col == 'h':
-						TrackingEnemy((x,y),[self.visible_sprites,self.obstacle_sprites],self.obstacle_sprites,self.player_sprite)
+						TrackingEnemy((x,y),[self.visible_sprites, self.enemy_sprites],self.obstacle_sprites,self.player_sprite)
+					elif col == 'n':
+						NPCAlly((x,y),[self.visible_sprites,self.obstacle_sprites, self.ally_sprites])
+					# elif col == 'c':
+					# 	ChatBubble((x,y),[self.visible_sprites,self.obstacle_sprites])
 					#portal mapping
 					elif col == 'd':
+						print(portal_incrementor)
 						Portal((x,y),[self.visible_sprites,self.portals],self.portal_mapping[portal_incrementor])
 						portal_incrementor = portal_incrementor + 1
 
@@ -154,7 +171,7 @@ class YSortCameraGroup(pygame.sprite.Group):
 		self.static_player_offset.y = player.rect.top - self.half_height + 32
 		
 		#load map
-		my_image = pygame.image.load(background_image)
+		my_image = background_image
 		# Set the size for the image
 		# DEFAULT_IMAGE_SIZE = (2700, 2500)
 		# Scale the image to your needed size
@@ -178,6 +195,8 @@ class YSortCameraGroup(pygame.sprite.Group):
 				self.display_surface.blit(sprite.image, offset_pos, sprite.sprite_location)
 			elif sprite.name == 'thorny_plant':
 				self.display_surface.blit(sprite.image, offset_pos, sprite.sprite_location)
+			elif sprite.name == 'npc_ally':
+				self.display_surface.blit(sprite.image, offset_pos, sprite.sprite_location)
 			elif sprite.name == 'enemy':
 				player_offest =  sprite.rect.topleft - self.static_player_offset - sprite.dynamic_offset
 				self.display_surface.blit(sprite.image, player_offest, sprite.sprite_location)
@@ -192,5 +211,14 @@ class YSortCameraGroup(pygame.sprite.Group):
 				self.display_surface.blit(sprite.image, offset_pos_bottom_right)
 			elif sprite.name == 'bottom_left':
 				self.display_surface.blit(sprite.image, offset_pos_bottom_left)
+			elif sprite.name == 'chat_bubble':
+				if sprite.visible:
+					self.display_surface.blit(sprite.image, sprite.offset - self.offset)
 			else:
 				self.display_surface.blit(sprite.image,offset_pos)
+		#must draw speech text last
+		for sprite in self.sprites():
+			if sprite.name == 'chat_bubble_text':
+				if sprite.visible:
+					print('visible')
+					self.display_surface.blit(sprite.image, sprite.offset - self.offset)

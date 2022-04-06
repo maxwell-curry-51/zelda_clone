@@ -1,18 +1,20 @@
 import pygame 
 from pygame.locals import *
 from settings import *
+from collision import *
 from spritesheet import SpriteSheet
 
 
 class Player(pygame.sprite.Sprite):
-	def __init__(self,pos,groups,obstacle_sprites,player_sprite,portals,parent):
+	def __init__(self,pos,groups,obstacle_sprites,player_sprite, enemy_sprites, ally_sprites, portals,parent):
 		super().__init__(groups)
-		super().__init__(player_sprite)
-		#add to list of things to draw
-		super().__init__(obstacle_sprites)
 		self.remove = False
 		# filename = '../graphics/test/link_sheet.png'
 		# piece_ss = SpriteSheet(filename)
+
+		self.enemy_sprites = enemy_sprites
+		self.obstacle_sprites = obstacle_sprites
+		self.ally_sprites = ally_sprites
 
 		#pause functionality
 		self.paused = False
@@ -96,13 +98,18 @@ class Player(pygame.sprite.Sprite):
 		self.last_direction = 0
 		self.speed = 5
 
-		self.obstacle_sprites = obstacle_sprites
+
+		#attack
 		self.attack = False
 		#self.attack_clock = pygame.time.Clock()
 		self.last_attack = pygame.time.get_ticks()
 		self.attack_cooldown = 500
 		self.able_to_attack = True
 		self.attack_hitbox = self.rect.inflate(50,50)
+
+		#interact
+		self.interact = False
+		self.x_released = True
 
 		self.portals = portals
 		self.parent = parent
@@ -111,57 +118,116 @@ class Player(pygame.sprite.Sprite):
 
 	def input(self):
 		keys = pygame.key.get_pressed()
-
-		if keys[pygame.K_UP]:
-			# self.movement_counter_x = 0
-			self.movement_counter = ( self.movement_counter + 1) % len(self.sprite_locations[2])
-			self.direction.y = -1
-			self.image = self.images[0]
-			self.sprite_location =self.sprite_locations[2][self.movement_counter]
-			self.last_direction = 2
-		elif keys[pygame.K_DOWN]:
-			# self.movement_counter_x = 0
-			self.movement_counter = ( self.movement_counter + 1) % len(self.sprite_locations[3])
-			self.direction.y = 1
-			self.image = self.images[0]
-			self.sprite_location =self.sprite_locations[3][self.movement_counter]
-			self.last_direction = 3
+		if self.interact:
+			1==1 # should the game be paused during an interaction?
 		else:
-			self.direction.y = 0
+			if keys[pygame.K_UP]:
+				# self.movement_counter_x = 0
+				self.movement_counter = ( self.movement_counter + 1) % len(self.sprite_locations[2])
+				self.direction.y = -1
+				self.image = self.images[0]
+				self.sprite_location =self.sprite_locations[2][self.movement_counter]
+				self.last_direction = 2
+			elif keys[pygame.K_DOWN]:
+				# self.movement_counter_x = 0
+				self.movement_counter = ( self.movement_counter + 1) % len(self.sprite_locations[3])
+				self.direction.y = 1
+				self.image = self.images[0]
+				self.sprite_location =self.sprite_locations[3][self.movement_counter]
+				self.last_direction = 3
+			else:
+				self.direction.y = 0
 
-		if keys[pygame.K_RIGHT]:
-			# self.movement_counter_x = 0
-			self.movement_counter = ( self.movement_counter + 1) % len(self.sprite_locations[0])
-			self.direction.x = 1
-		
-			#finally we will update the image that will be displayed
-			self.image = self.images[0]
-			self.sprite_location =self.sprite_locations[0][self.movement_counter]
-			self.last_direction = 0
-		elif keys[pygame.K_LEFT]:
-			# self.movement_counter_x = 0
-			self.movement_counter = ( self.movement_counter + 1) % len(self.sprite_locations[1])
-			self.direction.x = -1
-		
-			#finally we will update the image that will be displayed
-			self.image = pygame.transform.flip(self.images[0],True,False)
-			self.sprite_location = self.sprite_locations[1][self.movement_counter]
-			self.last_direction = 1
-		else:
-			self.direction.x = 0
-		if keys[pygame.K_SPACE]:
-			#need to delay attacks
-			if pygame.time.get_ticks() - self.attack_cooldown > self.last_attack:
-				self.attack = True
-				self.able_to_attack = False
-				self.last_attack = pygame.time.get_ticks()
-				# this needs to lock inputs until attack animation is complete
-				self.attack_animation = True
-				# set left attack offset
-				if self.last_direction == 1:
-					self.dynamic_offset.x = 24
-				if self.last_direction == 2:
-					self.dynamic_offset.y = 24
+			if keys[pygame.K_RIGHT]:
+				# self.movement_counter_x = 0
+				self.movement_counter = ( self.movement_counter + 1) % len(self.sprite_locations[0])
+				self.direction.x = 1
+
+				#finally we will update the image that will be displayed
+				self.image = self.images[0]
+				self.sprite_location =self.sprite_locations[0][self.movement_counter]
+				self.last_direction = 0
+			elif keys[pygame.K_LEFT]:
+				# self.movement_counter_x = 0
+				self.movement_counter = ( self.movement_counter + 1) % len(self.sprite_locations[1])
+				self.direction.x = -1
+
+				#finally we will update the image that will be displayed
+				self.image = pygame.transform.flip(self.images[0],True,False)
+				self.sprite_location = self.sprite_locations[1][self.movement_counter]
+				self.last_direction = 1
+			else:
+				self.direction.x = 0
+			if keys[pygame.K_SPACE]:
+				#need to delay attacks
+				if pygame.time.get_ticks() - self.attack_cooldown > self.last_attack:
+					self.attack = True
+					self.able_to_attack = False
+					self.last_attack = pygame.time.get_ticks()
+					# this needs to lock inputs until attack animation is complete
+					self.attack_animation = True
+					# set left attack offset
+					if self.last_direction == 1:
+						self.dynamic_offset.x = 24
+					if self.last_direction == 2:
+						self.dynamic_offset.y = 24
+			if keys[pygame.K_x]:
+				# #interaction button (ex: talk to npcs)
+				# self.interact = True
+				for sprite in self.ally_sprites:
+					if sprite.hitbox.colliderect(self.hitbox.inflate(30,30)) and sprite != self.rect :
+						if self.x_released:
+							self.x_released = False
+							if sprite.talking_point_iterator < len(sprite.talking_points):
+								# print(sprite.talking_points[sprite.talking_point_iterator])
+								for ch_bubble_sprite in self.ally_sprites:
+									chat_speech = []
+									if ch_bubble_sprite.name == 'chat_bubble':
+										ch_bubble_sprite.visible = True
+										ch_bubble_sprite.offset = sprite.rect.topleft + ch_bubble_sprite.chat_offset + sprite.chat_offset
+									
+								for ch_bubble_text_sprite in self.ally_sprites:
+									if ch_bubble_text_sprite.name == 'chat_bubble_text':
+										if len(sprite.talking_points) > sprite.talking_point_iterator and len(sprite.talking_points) > ch_bubble_text_sprite.line_number:
+											ch_bubble_text_sprite.visible = True
+											ch_bubble_text_sprite.offset = sprite.rect.topleft + ch_bubble_text_sprite.chat_offset + sprite.chat_offset
+											ch_bubble_text_sprite.offset.y = ch_bubble_text_sprite.offset.y - (25 * (2 - ch_bubble_text_sprite.line_number))
+											ch_bubble_text_sprite.render_new_speech_bubble(sprite.talking_points[sprite.talking_point_iterator][ch_bubble_text_sprite.line_number])
+								sprite.talk(sprite.talking_points[sprite.talking_point_iterator])
+								sprite.talking_point_iterator +=1
+								keys = None
+							else :
+								sprite.talking_point_iterator = 0
+								for sprite in self.ally_sprites:
+									if sprite.name == 'chat_bubble' or sprite.name == 'chat_bubble_text':
+										sprite.visible = False
+			else:
+				self.x_released = True
+	# def start_conversation(self, sprite):
+	# 	conversation_ongoing = True
+	# 	released = True
+	# 	for sprite in self.ally_sprites:
+	# 		if sprite.name == 'chat_bubble':
+	# 			chat_bubble
+	# 	while conversation_ongoing:
+	# 		keys = pygame.key.get_pressed()
+	# 		print(released)
+	# 		print(keys[pygame.K_x])
+	# 		if keys[pygame.K_x]:
+	# 			if released:
+	# 				if sprite.talking_point_iterator < len(sprite.talking_points):
+	# 					print(sprite.talking_points[sprite.talking_point_iterator])
+	# 					sprite.talking_point_iterator +=1
+	# 					released = False
+	# 					keys = None
+	# 				else :
+	# 					conversation_ongoing = False
+	# 					sprite.talking_point_iterator = 0
+	# 		else:
+	# 			print('here')
+	# 			released = True
+
+
 
 	def move(self,speed):
 
@@ -195,16 +261,16 @@ class Player(pygame.sprite.Sprite):
 
 			self.hitbox.x += self.direction.x * speed
 			self.attacked('horizontal')
-			self.collision('horizontal', False)
+			collision(self, 'horizontal', False)
 			self.hitbox.y += self.direction.y * speed
 			self.attacked('vertical')
-			self.collision('vertical', False)
+			collision(self, 'vertical', False)
 			self.rect.center = self.hitbox.center
 		
 			self.portal_collision()
 
 			if self.attack:
-				for sprite in self.obstacle_sprites:
+				for sprite in self.enemy_sprites:
 					# attack general area sprite.hitbox.colliderect(Rect(self.hitbox.x - 20, self.hitbox.y - 20, self.hitbox.w + 40, self.hitbox.h + 40))
 					attack_landed = False
 					if self.last_direction == 0:
@@ -233,40 +299,18 @@ class Player(pygame.sprite.Sprite):
 				self.attack = False
 		
 	def attacked(self,direction):
-		for sprite in self.obstacle_sprites:
+		for sprite in self.enemy_sprites:
 			if sprite.hitbox.colliderect(self.hitbox) and sprite != self.rect :
-				attacked = False
-				if sprite.name == 'spikes':
-					self.health = self.health - 1
+				self.health = self.health - 1
 				if sprite.name == 'beartrap':
-					self.health = self.health - 1
 					self.add_to_state(sprite)
 					sprite.kill()
-				if sprite.name == 'thorny_plant':
-					self.health = self.health - 1
 				
+
 				#knockback
-				if attacked:
-					for i in range(12):
-						self.incremental_knockback(direction)
-						self.collision(direction, True)
-
-	def collision(self,direction, is_knockback):
-		if direction == 'horizontal':
-			for sprite in self.obstacle_sprites:
-				if sprite.hitbox.colliderect(self.hitbox) and sprite != self.rect :
-					if ( self.direction.x > 0) != is_knockback: # and self.direction.x != 0: # moving right
-						self.hitbox.right = sprite.hitbox.left
-					if (self.direction.x < 0) != is_knockback: # and self.direction.x != 0: # moving left
-						self.hitbox.left = sprite.hitbox.right
-
-		if direction == 'vertical':
-			for sprite in self.obstacle_sprites:
-				if sprite.hitbox.colliderect(self.hitbox) and sprite != self.rect :
-					if (self.direction.y > 0) != is_knockback: # and self.direction.y != 0: # moving down
-						self.hitbox.bottom = sprite.hitbox.top
-					if (self.direction.y < 0) != is_knockback: # and self.direction.y != 0: # moving up
-						self.hitbox.top = sprite.hitbox.bottom
+				for i in range(12):
+					self.incremental_knockback(direction)
+					collision(self, direction, True)
 
 	def portal_collision(self):
 		for sprite in self.portals:
