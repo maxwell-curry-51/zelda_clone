@@ -21,8 +21,8 @@ class Game:
 		self.pause_released = True
 		
 		self.changed = False
-		self.last_spawn = ('EP_0_MAP',3,'m')
-		self.spawn = ('EP_0_MAP',3,'m')
+		self.last_spawn = ('SAMPLE_VILLAGE_MAP',1,'m')
+		self.spawn = ('SAMPLE_VILLAGE_MAP',1,'m')
 
 		#state object
 		'''

@@ -4,7 +4,7 @@ from spritesheet import SpriteSheet
 
 
 class ThornyPlant(pygame.sprite.Sprite):
-	def __init__(self,pos,groups,obstacle_sprites):
+	def __init__(self,pos,groups):
 		super().__init__(groups)
 
 		# used for state management

@@ -27,18 +27,13 @@ def move(self):
 
 # MOVEMENT_DELAY = [0,1]
 def incremental_knockback(self):
-	print('inc')
 	if self.attack_direction.y > 0: # moving down
-		print('down')
 		self.hitbox.top = self.hitbox.top - 5					
 	if self.attack_direction.y < 0: # moving up
-		print('up')
 		self.hitbox.top = self.hitbox.top + 5
 	collision(self, 'vertical', True)
 	if self.attack_direction.x > 0: # moving right
-		print('right')
 		self.hitbox.left = self.hitbox.left - 5
 	if self.attack_direction.x < 0: # moving left
-		print('left')
 		self.hitbox.left = self.hitbox.left + 5	
 	collision(self, 'horizontal',True)
