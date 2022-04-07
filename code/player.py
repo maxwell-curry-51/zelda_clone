@@ -6,7 +6,7 @@ from spritesheet import SpriteSheet
 
 
 class Player(pygame.sprite.Sprite):
-	def __init__(self,pos,groups,obstacle_sprites,player_sprite, enemy_sprites, ally_sprites, portals,parent):
+	def __init__(self,pos,groups,obstacle_sprites,player_sprite, enemy_sprites, ally_sprites, portals, collectable_sprites, parent):
 		super().__init__(groups)
 		self.remove = False
 		# filename = '../graphics/test/link_sheet.png'
@@ -15,6 +15,7 @@ class Player(pygame.sprite.Sprite):
 		self.enemy_sprites = enemy_sprites
 		self.obstacle_sprites = obstacle_sprites
 		self.ally_sprites = ally_sprites
+		self.collectable_sprites = collectable_sprites
 
 		#pause functionality
 		self.paused = False
@@ -114,7 +115,6 @@ class Player(pygame.sprite.Sprite):
 		self.portals = portals
 		self.parent = parent
 		self.name = 'player'
-		self.health = 10
 
 	def input(self):
 		keys = pygame.key.get_pressed()
@@ -178,54 +178,35 @@ class Player(pygame.sprite.Sprite):
 					if sprite.hitbox.colliderect(self.hitbox.inflate(30,30)) and sprite != self.rect :
 						if self.x_released:
 							self.x_released = False
-							if sprite.talking_point_iterator < len(sprite.talking_points):
-								# print(sprite.talking_points[sprite.talking_point_iterator])
-								for ch_bubble_sprite in self.ally_sprites:
-									chat_speech = []
-									if ch_bubble_sprite.name == 'chat_bubble':
-										ch_bubble_sprite.visible = True
-										ch_bubble_sprite.offset = sprite.rect.topleft + ch_bubble_sprite.chat_offset + sprite.chat_offset
-									
-								for ch_bubble_text_sprite in self.ally_sprites:
-									if ch_bubble_text_sprite.name == 'chat_bubble_text':
-										if len(sprite.talking_points) > sprite.talking_point_iterator and len(sprite.talking_points) > ch_bubble_text_sprite.line_number:
-											ch_bubble_text_sprite.visible = True
-											ch_bubble_text_sprite.offset = sprite.rect.topleft + ch_bubble_text_sprite.chat_offset + sprite.chat_offset
-											ch_bubble_text_sprite.offset.y = ch_bubble_text_sprite.offset.y - (25 * (2 - ch_bubble_text_sprite.line_number))
-											ch_bubble_text_sprite.render_new_speech_bubble(sprite.talking_points[sprite.talking_point_iterator][ch_bubble_text_sprite.line_number])
-								sprite.talk(sprite.talking_points[sprite.talking_point_iterator])
-								sprite.talking_point_iterator +=1
-								keys = None
-							else :
-								sprite.talking_point_iterator = 0
-								for sprite in self.ally_sprites:
-									if sprite.name == 'chat_bubble' or sprite.name == 'chat_bubble_text':
-										sprite.visible = False
+							if sprite.name == 'merchant':
+								#open merchant store
+								self.parent.parent.in_store = True
+							else:
+								if sprite.talking_point_iterator < len(sprite.talking_points):
+									# print(sprite.talking_points[sprite.talking_point_iterator])
+									for ch_bubble_sprite in self.ally_sprites:
+										chat_speech = []
+										if ch_bubble_sprite.name == 'chat_bubble':
+											ch_bubble_sprite.visible = True
+											ch_bubble_sprite.offset = sprite.rect.topleft + ch_bubble_sprite.chat_offset + sprite.chat_offset
+
+									for ch_bubble_text_sprite in self.ally_sprites:
+										if ch_bubble_text_sprite.name == 'chat_bubble_text':
+											if len(sprite.talking_points) > sprite.talking_point_iterator and len(sprite.talking_points) > ch_bubble_text_sprite.line_number:
+												ch_bubble_text_sprite.visible = True
+												ch_bubble_text_sprite.offset = sprite.rect.topleft + ch_bubble_text_sprite.chat_offset + sprite.chat_offset
+												ch_bubble_text_sprite.offset.y = ch_bubble_text_sprite.offset.y - (25 * (2 - ch_bubble_text_sprite.line_number))
+												ch_bubble_text_sprite.render_new_speech_bubble(sprite.talking_points[sprite.talking_point_iterator][ch_bubble_text_sprite.line_number])
+									sprite.talk(sprite.talking_points[sprite.talking_point_iterator])
+									sprite.talking_point_iterator +=1
+									keys = None
+								else :
+									sprite.talking_point_iterator = 0
+									for sprite in self.ally_sprites:
+										if sprite.name == 'chat_bubble' or sprite.name == 'chat_bubble_text':
+											sprite.visible = False
 			else:
 				self.x_released = True
-	# def start_conversation(self, sprite):
-	# 	conversation_ongoing = True
-	# 	released = True
-	# 	for sprite in self.ally_sprites:
-	# 		if sprite.name == 'chat_bubble':
-	# 			chat_bubble
-	# 	while conversation_ongoing:
-	# 		keys = pygame.key.get_pressed()
-	# 		print(released)
-	# 		print(keys[pygame.K_x])
-	# 		if keys[pygame.K_x]:
-	# 			if released:
-	# 				if sprite.talking_point_iterator < len(sprite.talking_points):
-	# 					print(sprite.talking_points[sprite.talking_point_iterator])
-	# 					sprite.talking_point_iterator +=1
-	# 					released = False
-	# 					keys = None
-	# 				else :
-	# 					conversation_ongoing = False
-	# 					sprite.talking_point_iterator = 0
-	# 		else:
-	# 			print('here')
-	# 			released = True
 
 
 
@@ -266,6 +247,7 @@ class Player(pygame.sprite.Sprite):
 			self.attacked('vertical')
 			collision(self, 'vertical', False)
 			self.rect.center = self.hitbox.center
+			self.collectable_collision()
 		
 			self.portal_collision()
 
@@ -301,7 +283,7 @@ class Player(pygame.sprite.Sprite):
 	def attacked(self,direction):
 		for sprite in self.enemy_sprites:
 			if sprite.hitbox.colliderect(self.hitbox) and sprite != self.rect :
-				self.health = self.health - 1
+				self.parent.parent.player_health = self.parent.parent.player_health - 1
 				if sprite.name == 'beartrap':
 					self.add_to_state(sprite)
 					sprite.kill()
@@ -319,6 +301,14 @@ class Player(pygame.sprite.Sprite):
 				print("level - " + sprite.next_map + " , sp - ")
 				print(sprite.spawn_point)
 				self.parent.parent.spawn  = (sprite.next_map,sprite.spawn_point, sprite.spawn_centering)
+
+	def collectable_collision(self):
+		for sprite in self.collectable_sprites:
+			if sprite.hitbox.colliderect(self.hitbox) and sprite != self.rect :
+				print("collected - " + sprite.name)
+				self.add_to_state(sprite)
+				sprite.kill()
+				print(self.parent.parent.state_dictionary)
 	
 	# may be able to change 5 to a larger value
 	def incremental_knockback(self,direction):

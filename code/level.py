@@ -7,6 +7,7 @@ from barriers.barrier_bl import BarrierBL
 from floor_tile import FloorTile
 from invisible_tile import InvisibleTile
 from portal import Portal
+from collectables.banana import Banana
 from player import Player
 from enemies.enemy import Enemy
 from enemies.spikes import Spikes
@@ -14,8 +15,10 @@ from enemies.beartrap import BearTrap
 from enemies.thorny_plant import ThornyPlant
 from tracking_enemy import TrackingEnemy
 from allies.npc_ally import NPCAlly
+from allies.merchant import Merchant
 from encounters.chat_bubble import ChatBubble
 from encounters.chat_bubble_text import ChatBubbleText
+from hud.hud import *
 from debug import debug
 
 class Level:
@@ -48,6 +51,7 @@ class Level:
 		# sprite group setup
 		self.visible_sprites = YSortCameraGroup(self.image_size,self.image_shift)
 		self.obstacle_sprites = pygame.sprite.Group()
+		self.collectable_sprites = pygame.sprite.Group()
 		self.enemy_sprites = pygame.sprite.Group()
 		self.ally_sprites = pygame.sprite.Group()
 		self.player_sprite = pygame.sprite.Group()
@@ -114,13 +118,15 @@ class Level:
 						FloorTile((x,y),[self.visible_sprites])
 					elif col == 'i':
 						InvisibleTile((x,y),[self.visible_sprites,self.obstacle_sprites])
+					elif col == 'B':
+						Banana((x,y),[self.visible_sprites,self.collectable_sprites])
 					elif col == 'p':
 						if self.spawn[1] == sp_incrementor:
 							# centering player to the door
 							if self.spawn[2] == 'm':
-								self.player = Player((x + 32,y),[self.visible_sprites,self.obstacle_sprites,self.player_sprite],self.obstacle_sprites,self.player_sprite, self.enemy_sprites, self.ally_sprites, self.portals,self)
+								self.player = Player((x + 32,y),[self.visible_sprites,self.obstacle_sprites,self.player_sprite],self.obstacle_sprites,self.player_sprite, self.enemy_sprites, self.ally_sprites, self.portals, self.collectable_sprites, self)
 							else:
-								self.player = Player((x ,y),[self.visible_sprites,self.obstacle_sprites,self.player_sprite],self.obstacle_sprites,self.player_sprite, self.enemy_sprites, self.ally_sprites, self.portals,self)
+								self.player = Player((x ,y),[self.visible_sprites,self.obstacle_sprites,self.player_sprite],self.obstacle_sprites,self.player_sprite, self.enemy_sprites, self.ally_sprites, self.portals, self.collectable_sprites, self)
 						sp_incrementor = sp_incrementor + 1
 					elif col == 'e':
 						Enemy((x,y),[self.visible_sprites,self.enemy_sprites],self.obstacle_sprites)
@@ -134,6 +140,8 @@ class Level:
 						TrackingEnemy((x,y),[self.visible_sprites, self.enemy_sprites],self.obstacle_sprites,self.player_sprite)
 					elif col == 'n':
 						NPCAlly((x,y),[self.visible_sprites,self.obstacle_sprites, self.ally_sprites])
+					elif col == 'm':
+						Merchant((x,y),[self.visible_sprites,self.obstacle_sprites, self.ally_sprites])
 					# elif col == 'c':
 					# 	ChatBubble((x,y),[self.visible_sprites,self.obstacle_sprites])
 					#portal mapping
@@ -144,7 +152,7 @@ class Level:
 
 	def run(self):
 		# update and draw the game
-		self.visible_sprites.custom_draw(self.player, self.background_image)
+		self.visible_sprites.custom_draw(self.player, self.background_image, self.parent.player_health)
 		self.visible_sprites.update()
 
 
@@ -162,7 +170,7 @@ class YSortCameraGroup(pygame.sprite.Group):
 		self.image_size = image_size
 		self.image_shift = image_shift
 
-	def custom_draw(self,player, background_image):
+	def custom_draw(self,player, background_image, player_health):
 
 		# getting the offset 
 		self.offset.x = player.rect.centerx - self.half_width
@@ -220,5 +228,5 @@ class YSortCameraGroup(pygame.sprite.Group):
 		for sprite in self.sprites():
 			if sprite.name == 'chat_bubble_text':
 				if sprite.visible:
-					print('visible')
 					self.display_surface.blit(sprite.image, sprite.offset - self.offset)
+		Display_HUD(self.display_surface, player_health, 8)
