@@ -305,10 +305,16 @@ class Player(pygame.sprite.Sprite):
 	def collectable_collision(self):
 		for sprite in self.collectable_sprites:
 			if sprite.hitbox.colliderect(self.hitbox) and sprite != self.rect :
-				print("collected - " + sprite.name)
-				self.add_to_state(sprite)
-				sprite.kill()
-				print(self.parent.parent.state_dictionary)
+				if sprite.name == 'banana':
+					print("collected - " + sprite.name)
+					self.add_to_state(sprite)
+					sprite.kill()
+					print(self.parent.parent.state_dictionary)
+				if sprite.name == 'health_pickup':
+					print("collected - " + sprite.name)
+					if self.parent.parent.player_health != self.parent.parent.player_max_health:
+						sprite.kill()
+						self.parent.parent.player_health = min(self.parent.parent.player_health + 1, self.parent.parent.player_max_health)
 	
 	# may be able to change 5 to a larger value
 	def incremental_knockback(self,direction):

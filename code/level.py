@@ -8,6 +8,7 @@ from floor_tile import FloorTile
 from invisible_tile import InvisibleTile
 from portal import Portal
 from collectables.banana import Banana
+from collectables.health_pickup import Health_Pickup
 from player import Player
 from enemies.enemy import Enemy
 from enemies.spikes import Spikes
@@ -120,6 +121,8 @@ class Level:
 						InvisibleTile((x,y),[self.visible_sprites,self.obstacle_sprites])
 					elif col == 'B':
 						Banana((x,y),[self.visible_sprites,self.collectable_sprites])
+					elif col == 'H':
+						Health_Pickup((x,y),[self.visible_sprites,self.collectable_sprites])
 					elif col == 'p':
 						if self.spawn[1] == sp_incrementor:
 							# centering player to the door
@@ -152,7 +155,7 @@ class Level:
 
 	def run(self):
 		# update and draw the game
-		self.visible_sprites.custom_draw(self.player, self.background_image, self.parent.player_health)
+		self.visible_sprites.custom_draw(self.player, self.background_image, self.parent.player_health, self.parent.player_max_health)
 		self.visible_sprites.update()
 
 
@@ -170,7 +173,7 @@ class YSortCameraGroup(pygame.sprite.Group):
 		self.image_size = image_size
 		self.image_shift = image_shift
 
-	def custom_draw(self,player, background_image, player_health):
+	def custom_draw(self,player, background_image, player_health, player_max_health):
 
 		# getting the offset 
 		self.offset.x = player.rect.centerx - self.half_width
@@ -229,4 +232,4 @@ class YSortCameraGroup(pygame.sprite.Group):
 			if sprite.name == 'chat_bubble_text':
 				if sprite.visible:
 					self.display_surface.blit(sprite.image, sprite.offset - self.offset)
-		Display_HUD(self.display_surface, player_health, 8)
+		Display_HUD(self.display_surface, player_health, player_max_health)
