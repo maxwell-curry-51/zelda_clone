@@ -104,7 +104,7 @@ class Game:
 				elif self.startup_menu_page == 2: # erase or play selected player
 					Display_Startup_Erase_Or_Play_Menu(display_surface, self.character_list[self.player_highlighted], self.erase_or_play_option_highlighted)
 				else:
-					print('exception')
+					print('start screen exception')
 
 				# play or erase file
 			else:

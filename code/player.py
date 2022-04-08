@@ -173,7 +173,6 @@ class Player(pygame.sprite.Sprite):
 						self.dynamic_offset.y = 24
 			if keys[pygame.K_x]:
 				# #interaction button (ex: talk to npcs)
-				# self.interact = True
 				for sprite in self.ally_sprites:
 					if sprite.hitbox.colliderect(self.hitbox.inflate(30,30)) and sprite != self.rect :
 						if self.x_released:
@@ -183,7 +182,6 @@ class Player(pygame.sprite.Sprite):
 								self.parent.parent.in_store = True
 							else:
 								if sprite.talking_point_iterator < len(sprite.talking_points):
-									# print(sprite.talking_points[sprite.talking_point_iterator])
 									for ch_bubble_sprite in self.ally_sprites:
 										chat_speech = []
 										if ch_bubble_sprite.name == 'chat_bubble':
@@ -275,6 +273,7 @@ class Player(pygame.sprite.Sprite):
 						sprite.health -= 1
 						print(sprite.health)
 						sprite.attacked = True
+						sprite.stunned = True
 						sprite.attacked_incrementor = 1
 						if sprite.health - 1 <= 0:
 							self.add_to_state(sprite)
