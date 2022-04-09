@@ -14,7 +14,7 @@ from enemies.enemy import Enemy
 from enemies.spikes import Spikes
 from enemies.beartrap import BearTrap
 from enemies.thorny_plant import ThornyPlant
-from tracking_enemy import TrackingEnemy
+from enemies.tracking_enemy import TrackingEnemy
 from allies.npc_ally import NPCAlly
 from allies.merchant import Merchant
 from encounters.chat_bubble import ChatBubble
@@ -41,10 +41,10 @@ class Level:
 		
 		self.map = settings[0] #use self.spawn[0]
 		self.portal_mapping = settings[1]
-		self.background_image = pygame.image.load(settings[2])
 		self.tilesize = settings[3]
 		self.image_size = settings[4]
 		self.image_shift = settings[5]
+		self.background_image = pygame.transform.scale(pygame.image.load(settings[2]), self.image_size)
 
 		# get the display surface 
 		self.display_surface = pygame.display.get_surface()
@@ -180,15 +180,12 @@ class YSortCameraGroup(pygame.sprite.Group):
 		self.offset.y = player.rect.centery - self.half_height
 		self.static_player_offset.x = player.rect.left - self.half_width + 32
 		self.static_player_offset.y = player.rect.top - self.half_height + 32
-		
-		#load map
-		my_image = background_image
-		# Set the size for the image
-		# DEFAULT_IMAGE_SIZE = (2700, 2500)
-		# Scale the image to your needed size
-		image = pygame.transform.scale(my_image, self.image_size)
+
 		#display map
-		self.display_surface.blit(image, self.image_shift - self.offset) # screen = pygame.display.set_mode((1200, 1000)) 
+		self.display_surface.blit(background_image, #image to blit
+		(0,0), #where to start blit?
+		(self.offset.x, self.offset.y,1280, 720)) # subimage to blit
+		# screen = pygame.display.set_mode((1200, 1000)) 
 
 		# for sprite in self.sprites():
 		for sprite in sorted(self.sprites(),key = lambda sprite: sprite.rect.centery):
@@ -208,7 +205,7 @@ class YSortCameraGroup(pygame.sprite.Group):
 				self.display_surface.blit(sprite.image, offset_pos, sprite.sprite_location)
 			elif sprite.name == 'npc_ally':
 				self.display_surface.blit(sprite.image, offset_pos, sprite.sprite_location)
-			elif sprite.name == 'enemy':
+			elif sprite.name == 'enemy' or sprite.name == 'tracking_enemy' :
 				player_offest =  sprite.rect.topleft - self.static_player_offset - sprite.dynamic_offset
 				self.display_surface.blit(sprite.image, player_offest, sprite.sprite_location)
 			elif sprite.name == 'player':
